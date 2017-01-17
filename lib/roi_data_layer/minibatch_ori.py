@@ -47,7 +47,7 @@ def get_minibatch(roidb, num_classes):
         blobs['im_info'] = np.array(
             [[im_blob.shape[2], im_blob.shape[3], im_scales[0]]],
             dtype=np.float32)
-        _vis_minibatch_(im_blob[0], gt_boxes)
+        #_vis_minibatch_(im_blob[0], gt_boxes)
     else: # not using RPN
         # Now, build the region of interest and label blobs
         rois_blob = np.zeros((0, 5), dtype=np.float32)
