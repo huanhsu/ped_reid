@@ -82,12 +82,12 @@ class TripletSelectLayer(caffe.Layer):
         ans = sorted(ans.items(), key = lambda d: d[1], reverse = True)  
 
         for i in range(self.triplet): 
-            top_archor.append(bottom[0].data[i])
-            top_positive.append(bottom[0].data[aps[i][0]])
-            top_negative.append(bottom[0].data[ans[i][0]])
+            top_archor.append(bottom[0].data[archor_feature_index])
+            top_positive.append(bottom[0].data[positive_feature_index])
+            top_negative.append(bottom[0].data[negitive_feature_index])
             if aps[i][1] >= ans[i][1]:
                self.no_residual_list.append(i)
-            self.tripletlist.append([i,aps[i][0],ans[i][0]])
+            self.tripletlist.append([archor_feature_index,positive_feature_index,negitive_feature_index])
 
         top[0].data[...] = np.array(top_archor).astype(float32)
         top[1].data[...] = np.array(top_positive).astype(float32)
