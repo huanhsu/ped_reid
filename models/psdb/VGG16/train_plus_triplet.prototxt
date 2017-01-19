@@ -656,8 +656,8 @@ layer {
   bottom: "norm2"
   top: "fc9_1"
   param {
-    lr_mult: 1
-    decay_mult: 2
+    lr_mult: 0.25
+    decay_mult: 0.5
   }
   inner_product_param {
     num_output: 32
@@ -690,7 +690,7 @@ layer {
   python_param {
     module: "tripletlosslayer"
     layer: "TripletLayer"
-    param_str: "'margin': 1"
+    param_str: "'margin': 0.001"
   }
   loss_weight: 1
 }

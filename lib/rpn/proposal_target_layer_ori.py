@@ -52,7 +52,7 @@ class ProposalTargetLayer(caffe.Layer):
         # TODO(rbg): it's annoying that sometimes I have extra info before
         # and other times after box coordinates -- normalize to one format
         gt_boxes = bottom[1].data
-
+        pdb.set_trace()
         # Include ground-truth boxes in the set of candidate rois
         zeros = np.zeros((gt_boxes.shape[0], 1), dtype=gt_boxes.dtype)
         all_rois = np.vstack(
@@ -165,6 +165,7 @@ def _sample_rois(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, num_clas
     examples.
     """
     # overlaps: (rois x gt_boxes)
+    pdb.set_trace()
     overlaps = bbox_overlaps(
         np.ascontiguousarray(all_rois[:, 1:5], dtype=np.float),
         np.ascontiguousarray(gt_boxes[:, :4], dtype=np.float))
@@ -201,7 +202,6 @@ def _sample_rois(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, num_clas
     rois = all_rois[keep_inds]
 
     # Auxiliary label if available
-    pdb.set_trace()
     aux_label = None
     if gt_boxes.shape[1] > 5:
         aux_label = gt_boxes[gt_assignment, 5]

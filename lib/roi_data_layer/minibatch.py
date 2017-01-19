@@ -42,6 +42,9 @@ def get_minibatch(roidb, num_classes):
 	        im_inds = np.empty((len(gt_inds), 1), dtype=np.float32)
 	        gt_boxes[:, 0:4] = roidb[im_i]['boxes'][gt_inds, :] * im_scales[im_i]
 	        gt_boxes[:, 4] = roidb[im_i]['gt_classes'][gt_inds]
+                if 'gt_pids' in roidb[im_i]:
+                    gt_boxes = np.hstack(
+                        [gt_boxes, roidb[im_i]['gt_pids'][gt_inds, np.newaxis]])
 		im_inds[:] = im_i;
 		if gt_boxes_all == []:
 			gt_boxes_all = gt_boxes;

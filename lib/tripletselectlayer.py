@@ -14,6 +14,7 @@ import yaml
 from multiprocessing import Process, Queue
 from caffe._caffe import RawBlobVec
 from sklearn import preprocessing
+from random import randrange
 import math
 import config
 import pdb
@@ -37,16 +38,44 @@ class TripletSelectLayer(caffe.Layer):
         self.no_residual_list=[]
         aps = {}
         ans = {}
-        #labels = bottom[1].data #cause bug for 2 hours... fuck
-        archor_feature = bottom[0].data[0]
+        #collect triplet set
+        imgs_idx = shape(bottom[1].data)[0] #2
+        feats_idx = shape(bottom[1].data)[1] #128
+        #archor, take from bottom[1].data[0]
+        archor_list = np.where(bottom[1].data[0][0:feats_idx-1]!=5532)
+        while True:
+              archor_index = randrange(0,shape(archor_list)[1])
+              archor_index = archor_list[0][archor_index]
+              archor_value = bottom[1].data[0][archor_index]
+              pos_list_temp = np.where(bottom[1].data[1][0:feats_idx-1]==archor_value)
+              if shape(pos_list_temp)[1]>0:
+                 break
+        #positive, take from bottom[1].data[1]
+        positive_list = np.where(bottom[1].data[1][0:feats_idx-1]==archor_value)
+        positive_index = randrange(0, shape(positive_list)[1])
+        positive_index = positive_list[0][positive_index]
+        positive_value = bottom[1].data[1][positive_index]
+        #negitive, take from bottom[1].data[1]
+        negitive_list = np.where(bottom[1].data[1][0:feats_idx-1]!=archor_value)
+        negitive_index = randrange(0, shape(negitive_list)[1])
+        negitive_index = negitive_list[0][negitive_index]
+        negitive_value = bottom[1].data[1][negitive_index]
+
+        #index in feature
+        archor_feature_index = archor_index
+        positive_feature_index = positive_index + 128
+        negitive_feature_index = negitive_index + 128 
+
+        #collect triplet set old
+        archor_feature = bottom[0].data[archor_feature_index]
         for i in range(self.triplet):
-            positive_feature = bottom[0].data[i+self.triplet]
+            positive_feature = bottom[0].data[positive_feature_index]
             a_p = archor_feature - positive_feature
             ap = np.dot(a_p,a_p)
             aps[i+self.triplet] = ap
         aps = sorted(aps.items(), key = lambda d: d[1], reverse = True)
         for i in range(self.triplet):
-            negative_feature = bottom[0].data[i+self.triplet*2]
+            negative_feature = bottom[0].data[negitive_feature_index]
             a_n = archor_feature - negative_feature
             an = np.dot(a_n,a_n)
             ans[i+self.triplet*2] = an

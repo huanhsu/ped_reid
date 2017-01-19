@@ -25,7 +25,7 @@ case $DATASET in
     TRAIN_IMDB="psdb_train"
     TEST_IMDB="psdb_test"
     PT_DIR="psdb"
-    ITERS=6000
+    ITERS=5000
     ;;
   *)
     echo "No dataset given"
@@ -39,7 +39,7 @@ echo Logging output to "$LOG"
 
 time python2 tools/train_net.py --gpu ${GPU_ID} \
   --solver models/${PT_DIR}/${NET}/solver_plus_triplet.prototxt \
-  --weights output/${DATASET}_pretrain/${NET}_iter_50000.caffemodel \
+  --weights output/${DATASET}_authortrain/${NET}_iter_100000.caffemodel \
   --imdb ${TRAIN_IMDB} \
   --iters ${ITERS} \
   --cfg experiments/cfgs/train.yml \
