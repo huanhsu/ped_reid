@@ -13,6 +13,7 @@ from datasets.pascal_voc import pascal_voc
 from datasets.coco import coco
 from datasets.psdb import psdb
 import numpy as np
+import pdb
 
 # Set up voc_<year>_<split> using selective search "fast" mode
 for year in ['2007', '2012']:

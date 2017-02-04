@@ -25,7 +25,7 @@ class Norm2Layer128(caffe.Layer):
         """Setup the TripletDataLayer."""
         
         #top[0].reshape(bottom[0].num, shape(bottom[0].data)[1])
-        top[0].reshape(256, shape(bottom[0].data)[1])
+        top[0].reshape(384, shape(bottom[0].data)[1])
     def forward(self, bottom, top):
         """Get blobs and copy them into this layer's top blob vector."""
         minibatch_db = []

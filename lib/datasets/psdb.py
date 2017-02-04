@@ -7,6 +7,7 @@ import datasets
 from datasets.imdb import imdb
 from fast_rcnn.config import cfg
 from utils import cython_bbox, pickle, unpickle
+import pdb
 
 
 def _compute_iou(a, b):
@@ -55,6 +56,7 @@ class psdb(imdb):
         all_imgs = all_imgs['Img'].squeeze()
         name_to_boxes = {}
         name_to_pids = {}
+        #pdb.set_trace()
         for im_name, __, boxes in all_imgs:
             im_name = str(im_name[0])
             boxes = np.asarray([b[0] for b in boxes[0]])
@@ -72,7 +74,6 @@ class psdb(imdb):
                     pids[i] = pid
                     return
             print 'Warning: person {} box {} cannot find in Images'.format(pid, box)
-
         # Load all the train / test persons and number their pids from 1 to N-1
         # Background people have pid == 0
         if self._image_set == 'train':

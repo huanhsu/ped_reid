@@ -67,7 +67,6 @@ class ProposalTargetLayer(caffe.Layer):
         #assert np.all(all_rois[:, 0] == 0), \
         #        'Only single item batches are supported'
 	# num_images = 1;
-
         num_images = cfg.TRAIN.IMS_PER_BATCH;
         rois_per_image = cfg.TRAIN.BATCH_SIZE;
         #rois_per_image = cfg.TRAIN.BATCH_SIZE / num_images
