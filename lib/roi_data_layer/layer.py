@@ -16,6 +16,8 @@ from roi_data_layer.minibatch import get_minibatch
 import numpy as np
 import yaml
 from multiprocessing import Process, Queue
+from random import randrange
+import math
 import pdb
 
 class RoIDataLayer(caffe.Layer):
@@ -46,28 +48,40 @@ class RoIDataLayer(caffe.Layer):
         """Return triplet set inds"""      
         anchor_inds = 0
         positive_inds = 0
+        negative_inds = 0
 
         getAnchor = 0
         getPositive = 0
+        getNegative = 0
 
         anchorPid = 0
         positivePid = 0
+        negativePid = 0
 
         #lets find an anchor that does not have all gt_pids == [-1,-1... -1]
         for indexAnchordata in range(self._cur,len(self._roidb)):
             if getAnchor:
                anchor_inds = indexAnchordata-1
                break #jump out anchor data loop
-            for indexPid in range(len(self._roidb[self._perm[indexAnchordata]]['gt_pids'])):
-                anchorPid =  self._roidb[self._perm[indexAnchordata]]['gt_pids'][indexPid] 
-	        if anchorPid < 0:
-                   continue
-                else:
-                   anchor = self._roidb[self._perm[indexAnchordata]] 
-                   getAnchor = 1
-                   break #jump out anchor pids loop
+            #for indexPid in range(len(self._roidb[self._perm[indexAnchordata]]['gt_pids'])):
+            #    anchorPid =  self._roidb[self._perm[indexAnchordata]]['gt_pids'][indexPid] 
+	    #    if anchorPid == 5532:
+            #       continue
+            #    else:
+            #       anchor = self._roidb[self._perm[indexAnchordata]]
+                   #choose the first one which is not -1 
+            #       getAnchor = 1
+            #       break #jump out anchor pids loop
+            archorPid_list = np.where(self._roidb[self._perm[indexAnchordata]]['gt_pids']!=-1)
+            if len(archorPid_list[0]) == 0:
+               continue
+            else:
+               archorPid_index = randrange(0,len(archorPid_list[0]))
+               archorPid_index = archorPid_list[0][archorPid_index]
+               anchorPid = self._roidb[self._perm[indexAnchordata]]['gt_pids'][archorPid_index]
+               getAnchor = 1
          
-        #if got an anchor, then lets get positive sample
+        #if got an anchor, then lets get positive sample from begin to end
         for indexPosdata in range(0,len(self._roidb)):
             if getPositive:
                positive_inds = indexPosdata-1
@@ -83,24 +97,48 @@ class RoIDataLayer(caffe.Layer):
                    positive = self._roidb[self._perm[indexPosdata]] 
                    getPositive = 1
                    break #jump out positive pids loop
+        
+        #pdb.set_trace()
+        indexNegdata = 0
+        #Get negative        
+        while True:
+            #print ('layer negative while')
+            if getNegative:
+               negative_inds = indexNegdata
+               break #jump out negative data loop
+            else:
+               indexNegdata = randrange(0,len(self._perm))
 
-        return anchor_inds, positive_inds, getPositive
+            for indexPid in range(len(self._roidb[self._perm[indexNegdata]]['gt_pids'])):
+                negativePid =  self._roidb[self._perm[indexNegdata]]['gt_pids'][indexPid] 
+	        if negativePid == anchorPid or negativePid == -1 or negativePid == 5532:
+                   continue
+                else:
+                   negative = self._roidb[self._perm[indexNegdata]] 
+                   getNegative = 1
+                   break #jump out negative pids loop
+        
+        #print ('Triplet set'+' an:'+str(anchorPid)+' '+'pos:'+str(positivePid)+' '+'neg:'+str(negativePid))
+        return self._perm[anchor_inds], self._perm[positive_inds], self._perm[negative_inds], getPositive
 
 
     def _get_next_minibatch_inds(self):
         """Return the roidb indices for the next minibatch."""
         if self._cur + cfg.TRAIN.IMS_PER_BATCH >= len(self._roidb):
             self._shuffle_roidb_inds()
-        db_inds = self._perm[self._cur:self._cur + cfg.TRAIN.IMS_PER_BATCH]
-
+        #db_inds = self._perm[self._cur:self._cur + cfg.TRAIN.IMS_PER_BATCH]
+        db_inds = np.zeros(cfg.TRAIN.IMS_PER_BATCH,dtype=np.int)
         #triplet loss
         while self._cur<len(self._roidb):
-              anchor_inds, positive_inds, getPositive= self._get_triplet_inds()
+              #print('layer self._cur while')
+              anchor_inds, positive_inds, negative_inds, getPositive= self._get_triplet_inds()
               if not getPositive: #do not have matching positive for anchor
                      self._cur += 1
               else:
-                  db_inds[0] = self._perm[anchor_inds]
-                  db_inds[1] = self._perm[positive_inds]
+                  
+                  db_inds[0] = anchor_inds
+                  db_inds[1] = positive_inds
+                  db_inds[2] = negative_inds
                   self._cur = anchor_inds
                   break
         self._cur += 1 #go to next anchor
@@ -115,7 +153,6 @@ class RoIDataLayer(caffe.Layer):
         if cfg.TRAIN.USE_PREFETCH:
             return self._blob_queue.get()
         else:
-            #pdb.set_trace()
             db_inds = self._get_next_minibatch_inds()
             minibatch_db = [self._roidb[i] for i in db_inds]
             return get_minibatch(minibatch_db, self._num_classes)
